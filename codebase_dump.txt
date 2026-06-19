@@ -1,0 +1,1611 @@
+./codebase_dump.txt
+---
+
+
+---
+./flake.lock
+---
+{
+  "nodes": {
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781043330,
+        "narHash": "sha256-eApJsGv0lSn8OKqcBQJDFZI6Jg8coS7M8urNo3cVl9U=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "bd4277722d215970366a405d280301a796a364fc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1780749050,
+        "narHash": "sha256-3av0pIjlOWQ6rDbNOmpUSvbNnJkGORQKKjb4LtCZsIY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "noctalia": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "noctalia-qs": "noctalia-qs"
+      },
+      "locked": {
+        "lastModified": 1780803063,
+        "narHash": "sha256-pthUzeY81Gx1PTKCP4gYTwZYUxNpKZh2pOLPa9ZyofI=",
+        "owner": "noctalia-dev",
+        "repo": "noctalia-shell",
+        "rev": "5311e14d2000af2f523789c76a3d869dcb42f130",
+        "type": "github"
+      },
+      "original": {
+        "owner": "noctalia-dev",
+        "repo": "noctalia-shell",
+        "type": "github"
+      }
+    },
+    "noctalia-qs": {
+      "inputs": {
+        "nixpkgs": [
+          "noctalia",
+          "nixpkgs"
+        ],
+        "systems": "systems",
+        "treefmt-nix": "treefmt-nix"
+      },
+      "locked": {
+        "lastModified": 1780799499,
+        "narHash": "sha256-YloRtLqJabzYUWvdLyh67zH4DZrR3kQj+dlQJwLPmPM=",
+        "owner": "noctalia-dev",
+        "repo": "noctalia-qs",
+        "rev": "f308426239665e3bc3d624014e9295b2ae2f58ff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "noctalia-dev",
+        "repo": "noctalia-qs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "home-manager": "home-manager",
+        "nixpkgs": "nixpkgs",
+        "noctalia": "noctalia"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1689347949,
+        "narHash": "sha256-12tWmuL2zgBgZkdoB6qXZsgJEH9LR3oUgpaQq2RbI80=",
+        "owner": "nix-systems",
+        "repo": "default-linux",
+        "rev": "31732fcf5e8fea42e59c2488ad31a0e651500f68",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default-linux",
+        "type": "github"
+      }
+    },
+    "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "noctalia",
+          "noctalia-qs",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1780220602,
+        "narHash": "sha256-eynAfOmbmxJnkp7YewvCEbShNnnYJ9gLLqkzsYtBPeM=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "db947814a175b7ca6ded66e21383d938df01c227",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
+
+
+---
+./flake.nix
+---
+{
+  description = "NIX OS CONFIG";
+
+  inputs = {
+    # Specify the source of Home Manager and Nixpkgs
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable"; # Or "nixos-unstable"
+    
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      # Ensure Home Manager uses the exact same nixpkgs as the system
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    noctalia = {
+          url = "github:noctalia-dev/noctalia-shell";
+          inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    
+  };
+
+  outputs = { self, nixpkgs, home-manager, ... }@inputs: {
+
+    nixosConfigurations.awesomebox = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            # ... other modules
+            ./noctalia.nix
+          ];
+        };
+
+  
+    nixosConfigurations = {
+      # "nixos" is your hostname
+      nixos = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        # Pass inputs to modules if you need them later
+        specialArgs = { inherit inputs; };
+        
+        modules = [
+          ./hosts/nixos/configuration.nix
+
+          # Add Home Manager as a module
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+			home-manager.extraSpecialArgs = { inherit inputs; };
+			home-manager.backupFileExtension = "backup";
+            # Link to your user's home.nix
+            home-manager.users.user = import ./home/user/home.nix;
+          }
+        ];
+      };
+    };
+  };
+}
+
+
+---
+./hosts/nixos/configuration.nix
+---
+{ config, pkgs, ... }:
+
+{
+  imports = [ 
+    ./hardware-configuration.nix
+  ];
+
+  # --- Boot & Bootloader ---
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  boot.consoleLogLevel = 0;
+  boot.initrd.verbose = false;
+  boot.kernelParams = [
+    "quiet"
+    "splash"
+    "boot.shell_on_fail"
+    "loglevel=3"
+    "rd.systemd.show_status=false"
+    "rd.udev.log_level=3"
+    "udev.log_priority=3"    
+  ];
+
+  boot.plymouth = {
+    enable = true;
+    themePackages = with pkgs; [ adi1090x-plymouth-themes ];
+    theme = "hexagon_dots_alt";
+  };
+
+  # --- Hardware & Graphics ---
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    open = true;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    prime = {
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
+  };
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.bluetooth.enable = true;
+
+  # --- Networking & Time ---
+  networking.hostName = "nixos";
+  networking.networkmanager.enable = true;
+  time.timeZone = "America/Matamoros";
+  i18n.defaultLocale = "en_US.UTF-8";
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "";
+  };
+
+  # --- Users ---
+  users.users."user" = {
+    isNormalUser = true;
+    description = "USER";
+    extraGroups = [ "networkmanager" "wheel" ];
+    # Leave packages empty here; Home Manager handles it now.
+    packages = []; 
+  };
+
+  # --- System Packages & Features ---
+  nix.settings.experimental-features = [ "nix-command" "flakes" ]; # Essential for Flakes
+  nixpkgs.config.allowUnfree = true;
+
+  environment.systemPackages = with pkgs; [
+    lshw
+    xwayland-satellite
+  ];
+
+  # --- Programs & Services ---
+  programs.niri.enable = true;
+
+  programs.kdeconnect.enable = true;
+
+  services.upower.enable = true;
+  services.power-profiles-daemon.enable = true;
+
+  services.greetd = {
+    enable = true;
+    settings = {
+    default_session = {
+       command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd niri-session --theme 'border=#222222;text=#cccccc;prompt=#FFD421;time=#FFD421;action=#FFD421;button=#FFD421;container=#111111;input=#f5f5f5'";
+        user = "user";
+      };
+    };
+  };
+
+  systemd.user.services.niri.enableDefaultPath = false;
+  systemd.services.greetd.serviceConfig = {
+    Type = "idle";
+    StandardInput = "tty";
+    StandardOutput = "tty";
+    StandardError = "journal";
+    TTYReset = true;
+    TTYHangup = true;
+    TTYVTDisallocate = true;
+  };
+
+  system.stateVersion = "26.05";
+}
+
+
+---
+./hosts/nixos/hardware-configuration.nix
+---
+# Do not modify this file!  It was generated by ‘nixos-generate-config’
+# and may be overwritten by future invocations.  Please make changes
+# to /etc/nixos/configuration.nix instead.
+{ config, lib, pkgs, modulesPath, ... }:
+
+{
+  imports =
+    [ (modulesPath + "/installer/scan/not-detected.nix")
+    ];
+
+  boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "thunderbolt" "usbhid" "uas" "sd_mod" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+
+  fileSystems."/" =
+    { device = "/dev/disk/by-uuid/8be6e83b-555d-4df1-a54e-f757e0d34e4f";
+      fsType = "ext4";
+    };
+
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/3DB2-04E7";
+      fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
+    };
+
+  swapDevices = [ ];
+
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+}
+
+
+---
+./ref_utils/print-nix-structure-instructions.txt
+---
+formats everything perfectly into a clean layout with file path delimiters, you can use a Python utility called files-to-prompt
+
+RUN IN ~/nixos-config/
+
+nix-shell -p python311Packages.files-to-prompt --run "files-to-prompt ." > codebase_dump.txt
+
+
+---
+./home/user/home.nix
+---
+# Notice we added `inputs` to the arguments here
+{ config, pkgs, inputs, ... }:
+
+{
+  home.username = "user";
+  home.homeDirectory = "/home/user";
+
+  # Import the Noctalia Home Manager module from your flake inputs
+  imports = [
+    inputs.noctalia.homeModules.default
+    ./programs/alacritty.nix
+    ./programs/noctalia.nix
+    ./programs/niri.nix
+    ./programs/git.nix
+    ./programs/ssh.nix
+  ];
+
+  home.packages = with pkgs; [
+  
+    # Wayland Tools
+    wl-clipboard
+    alacritty
+    fuzzel
+    grim
+    slurp
+    
+    # Browsers & Editors
+    firefox
+    micro
+
+    # Media viewers
+    imv
+    mpv
+
+    # PW Management
+    keepassxc
+
+    # System Monitor
+    btop
+
+    # Core Linux Utilities
+    git
+    curl
+    wget
+    unzip
+    zip
+
+    # Modern CLI Tools
+    eza
+    bat
+    ripgrep
+    fzf
+    
+    # File Manager (Pick one or both)
+    thunar
+
+    # Linux Utilities
+    util-linux
+    efibootmgr
+
+    # System Stats
+    inxi
+    
+    
+    
+  ];
+
+  programs.home-manager.enable = true;
+
+
+  # --- System-Wide Dark Theme ---
+  
+  # 1. Configure GTK (used by most Linux applications)
+  gtk = {
+    enable = true;
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
+  };
+  
+  # 2. Tell modern GNOME/Wayland apps to use dark mode via dconf
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+    };
+  };
+  
+  # 3. Tell Qt apps (like VLC, OBS) to match your GTK theme
+  qt = {
+    enable = true;
+    platformTheme.name = "gtk";
+  };
+
+
+
+  home.stateVersion = "26.05";
+}
+
+
+---
+./home/user/programs/alacritty.nix
+---
+{ config, pkgs, ... }:
+{
+programs.alacritty = {
+      enable = true;
+      settings = {
+        colors = {
+          primary = {
+            background = "#111111"; # Main terminal background
+            foreground = "#f5f5f5"; # Standard terminal text
+          };
+          
+          cursor = {
+            text   = "#111111"; # The character sitting underneath the cursor block
+            cursor = "#FFD421"; # The cursor block itself
+          };
+          
+          selection = {
+            text       = "#ffffff"; # Text color when highlighted/selected
+            background = "#333333"; # Highlight background color
+          };
+  
+          normal = {
+            black   = "#111111"; # Invisible/hidden text (matches background)
+            red     = "#ff5555"; # Standard errors, git deletions, failed tests
+            green   = "#FFD421"; # Shell prompt (user@nixos), git additions, success messages
+            yellow  = "#FFD421"; # Warnings, specific syntax highlights
+            blue    = "#888888"; # Directory names in ls, links
+            magenta = "#ff5555"; # Git merge conflicts, specific syntax highlights
+            cyan    = "#cccccc"; # Symlinks in ls, specific syntax highlights
+            white   = "#f5f5f5"; # Standard explicit white text
+          };
+  
+          bright = {
+            black   = "#222222"; # Dark grey text, often used for comments or subtle info
+            red     = "#ff5555"; # Bold/highlighted errors
+            green   = "#FFD421"; # Bold/highlighted shell prompt (user@nixos)
+            yellow  = "#FFD421"; # Bold/highlighted warnings
+            blue    = "#888888"; # Bold/highlighted directory names
+            magenta = "#ff5555"; # Bold/highlighted magenta
+            cyan    = "#cccccc"; # Bold/highlighted symlinks
+            white   = "#ffffff"; # Bold/highlighted explicit white text
+          };
+        };
+      };
+    };
+
+
+}
+
+
+---
+./home/user/programs/git.nix
+---
+{ config, pkgs, inputs, ... }:
+
+{
+  programs.git = {
+    enable = true;
+    
+    # 5. Enable Git Large File Storage (LFS) globally if needed
+    # Note: lfs.enable remains a top-level module option, not part of settings.
+    lfs.enable = true;
+
+    # 3. Global Gitignore rules (Uncommented just in case you want them, 
+    # but still a top-level array option in Home Manager)
+    # ignores = [ 
+    #   "*~" 
+    #   "*.swp" 
+    #   ".DS_Store" 
+    # ];
+
+    # The new unified settings block replacing extraConfig, userName, userEmail, and aliases
+    settings = {
+      # 1. Global User Identity
+      user = {
+        name = "Zane Reda";
+        email = "redazanelc@gmail.com";
+      };
+
+      # 2. Global Aliases
+      alias = {
+        st = "status";
+        co = "checkout";
+        cm = "commit";
+        rb = "rebuild";
+      };
+
+      # 4. Advanced/Global INI Settings
+      init = {
+        defaultBranch = "main";
+      };
+      
+      push = {
+        autoSetupRemote = true;
+      };
+
+      safe = {
+        directory = [
+          "/home/user/nixos-config"
+        ];
+      };
+
+      core = {
+        editor = "micro"; 
+      };
+    };
+  };
+}
+
+/*
+=============================================================================
+METH0D 1: DECLARATIVE GIT + SSH AUTHENTICATION SETUP GUIDE
+=============================================================================
+
+This file handles your Git/SSH identity configuration. Because NixOS emphasizes 
+security, private keys are kept strictly local to each machine, while the 
+configuration rules below are pushed to GitHub.
+
+--- STEP 1: GENERATE A NEW SSH KEY FOR THIS MACHINE ---
+Open your terminal on the local machine and run:
+  $ ssh-keygen -t ed25519 -C "redazanelc@gmail.com"
+
+- Press [Enter] to accept the default file path (~/.ssh/id_ed25519).
+- (Optional) Enter a strong passphrase, or press enter twice for no password.
+
+--- STEP 2: LINK THE KEY TO YOUR GITHUB ACCOUNT ---
+1. Print out your unique public key to the terminal:
+   $ cat ~/.ssh/id_ed25519.pub
+
+2. Copy the entire output string (starts with ssh-ed25519 ...).
+3. Open your browser and navigate to: https://github.com/settings/keys
+4. Click 'New SSH Key', paste your key, and give it a recognizable name 
+   describing this specific computer (e.g., "NixOS - Main Desktop").
+
+--- STEP 3: TEST YOUR CONNECTION ---
+Verify that GitHub recognizes your key pair by running:
+  $ ssh -T git@github.com
+
+  TYPE "yes" HERE
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? 
+
+If successful, you will see: 
+"Hi redazanelc! You've successfully authenticated, but GitHub does not 
+provide shell access."
+
+--- STEP 4: UPDATE YOUR LOCAL REPOSITORY LINK ---
+If you originally cloned your nixos-config repository using an HTTPS url, 
+convert it to use SSH authentication instead:
+  $ cd ~/nixos-config
+  $ git remote set-url origin git@github.com:your-username/your-repo-name.git
+
+From this point forward, commands like `git push` and `git pull` will function 
+silently and securely in the background without prompting you for a password.
+=============================================================================
+*/
+
+
+---
+./home/user/programs/niri.nix
+---
+# niri.nix
+{ config, pkgs, lib, ... }:
+
+{
+  xdg.configFile."niri/config.kdl".text = ''
+    // Input device configuration
+    input {
+        keyboard {
+            xkb {}
+            numlock
+        }
+        touchpad {
+            tap
+            natural-scroll
+        }
+        mouse {}
+    }
+
+    // Layout, Aesthetics, and Theming
+    layout {
+        gaps 12
+
+        // Centers the focused column automatically if it doesn't fit on screen
+        center-focused-column "on-overflow"
+
+        preset-column-widths {
+            proportion 0.33333
+            proportion 0.5
+            proportion 0.66667
+        }
+        default-column-width { proportion 0.5; }
+
+        // Black, White & Soft Yellow Theme
+        focus-ring {
+            width 3
+            active-color "#FFD421"   // Soft warm yellow
+            inactive-color "#222222" // Dark grey/near black
+        }
+
+        border {
+            off
+        }
+
+        // Elegant drop shadows
+        shadow {
+            on
+            draw-behind-window true
+            softness 25
+            spread 2
+            offset x=0 y=4
+            color "#00000070"
+        }
+    }
+
+    // Automatically starts your new desktop shell instead of Waybar
+    spawn-at-startup "noctalia-shell"
+
+    // Forces applications to drop their ugly default titlebars 
+    // so Niri's yellow focus ring shines cleanly.
+    prefer-no-csd
+
+    screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+    animations {
+        // Relying on Niri's smooth default physics
+    }
+
+    // Global rounded corners
+    window-rule {
+        geometry-corner-radius 10
+        clip-to-geometry true
+    }
+
+    window-rule {
+        match app-id=r#"^org\.wezfurlong\.wezterm$"#
+        default-column-width {}
+    }
+
+    window-rule {
+        match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+        open-floating true
+    }
+
+    debug {
+        honor-xdg-activation-with-invalid-serial
+    }
+
+    // Set the overview wallpaper on the backdrop
+    layer-rule {
+        match namespace="^noctalia-overview*"
+        place-within-backdrop true
+    }
+
+    switch-events {
+        lid-close {
+            spawn "noctalia-shell" "ipc" "call" "lockScreen" "lock"
+        }
+    } 
+
+    binds {
+        // ---------------------------------------------------------
+        // ORIGINAL NIRI DEFAULTS (UNTOUCHED)
+        // ---------------------------------------------------------
+        Mod+Alt+Space { show-hotkey-overlay; }
+
+        // Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
+        // Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+        Mod+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "noctalia-shell" "ipc" "call" "lockScreen" "lock"; }
+
+        Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
+
+        XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
+        XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
+        XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+        XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+        XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+        XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
+        XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
+        XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
+
+        XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+        XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+
+        Mod+O repeat=false { toggle-overview; }
+        Mod+Q repeat=false { close-window; }
+
+        Mod+Left  { focus-column-left; }
+        Mod+Down  { focus-window-down; }
+        Mod+Up    { focus-window-up; }
+        Mod+Right { focus-column-right; }
+        Mod+H     { focus-column-left; }
+        Mod+J     { focus-window-down; }
+        Mod+K     { focus-window-up; }
+        Mod+L     { focus-column-right; }
+
+        Mod+Ctrl+Left  { move-column-left; }
+        Mod+Ctrl+Down  { move-window-down; }
+        Mod+Ctrl+Up    { move-window-up; }
+        Mod+Ctrl+Right { move-column-right; }
+        Mod+Ctrl+H     { move-column-left; }
+        Mod+Ctrl+J     { move-window-down; }
+        Mod+Ctrl+K     { move-window-up; }
+        Mod+Ctrl+L     { move-column-right; }
+
+        Mod+Home { focus-column-first; }
+        Mod+End  { focus-column-last; }
+        Mod+Ctrl+Home { move-column-to-first; }
+        Mod+Ctrl+End  { move-column-to-last; }
+
+        // Mod+Shift+Left  { focus-monitor-left; }
+        // Mod+Shift+Down  { focus-monitor-down; }
+        // Mod+Shift+Up    { focus-monitor-up; }
+        // Mod+Shift+Right { focus-monitor-right; }
+        // Mod+Shift+H     { focus-monitor-left; }
+        // Mod+Shift+J     { focus-monitor-down; }
+        // Mod+Shift+K     { focus-monitor-up; }
+        // Mod+Shift+L     { focus-monitor-right; }
+
+        // Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+        // Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
+        // Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
+        // Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+        // Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
+        // Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
+        // Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
+        // Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+
+        Mod+Page_Down      { focus-workspace-down; }
+        Mod+Page_Up        { focus-workspace-up; }
+        Mod+U              { focus-workspace-down; }
+        Mod+I              { focus-workspace-up; }
+        Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
+        Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
+        Mod+Ctrl+U         { move-column-to-workspace-down; }
+        Mod+Ctrl+I         { move-column-to-workspace-up; }
+
+        Mod+Shift+Page_Down { move-workspace-down; }
+        Mod+Shift+Page_Up   { move-workspace-up; }
+        Mod+Shift+U         { move-workspace-down; }
+        Mod+Shift+I         { move-workspace-up; }
+
+        Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+        Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+        Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+        Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+
+        Mod+WheelScrollRight      { focus-column-right; }
+        Mod+WheelScrollLeft       { focus-column-left; }
+        Mod+Ctrl+WheelScrollRight { move-column-right; }
+        Mod+Ctrl+WheelScrollLeft  { move-column-left; }
+
+        Mod+Shift+WheelScrollDown      { focus-column-right; }
+        Mod+Shift+WheelScrollUp        { focus-column-left; }
+        Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
+        Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
+
+        Mod+1 { focus-workspace 1; }
+        Mod+2 { focus-workspace 2; }
+        Mod+3 { focus-workspace 3; }
+        Mod+4 { focus-workspace 4; }
+        Mod+5 { focus-workspace 5; }
+        Mod+6 { focus-workspace 6; }
+        Mod+7 { focus-workspace 7; }
+        Mod+8 { focus-workspace 8; }
+        Mod+9 { focus-workspace 9; }
+
+        Mod+Ctrl+1 { move-column-to-workspace 1; }
+        Mod+Ctrl+2 { move-column-to-workspace 2; }
+        Mod+Ctrl+3 { move-column-to-workspace 3; }
+        Mod+Ctrl+4 { move-column-to-workspace 4; }
+        Mod+Ctrl+5 { move-column-to-workspace 5; }
+        Mod+Ctrl+6 { move-column-to-workspace 6; }
+        Mod+Ctrl+7 { move-column-to-workspace 7; }
+        Mod+Ctrl+8 { move-column-to-workspace 8; }
+        Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+        Mod+BracketLeft  { consume-or-expel-window-left; }
+        Mod+BracketRight { consume-or-expel-window-right; }
+        Mod+Comma  { consume-window-into-column; }
+        Mod+Period { expel-window-from-column; }
+
+        Mod+R { switch-preset-column-width; }
+        Mod+Shift+R { switch-preset-column-width-back; }
+        Mod+Ctrl+Shift+R { switch-preset-window-height; }
+        Mod+Ctrl+R { reset-window-height; }
+
+        Mod+F { maximize-column; }
+        Mod+Shift+F { fullscreen-window; }
+        Mod+M { maximize-window-to-edges; }
+        Mod+Ctrl+F { expand-column-to-available-width; }
+        Mod+C { center-column; }
+        Mod+Ctrl+C { center-visible-columns; }
+
+        Mod+Minus { set-column-width "-10%"; }
+        Mod+Equal { set-column-width "+10%"; }
+        Mod+Shift+Minus { set-window-height "-10%"; }
+        Mod+Shift+Equal { set-window-height "+10%"; }
+
+        Mod+V       { toggle-window-floating; }
+        Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+        Mod+W { toggle-column-tabbed-display; }
+
+        Print { screenshot; }
+        Ctrl+Print { screenshot-screen; }
+        Alt+Print { screenshot-window; }
+
+        Mod+Shift+E { quit; }
+        Ctrl+Alt+Delete { quit; }
+        Mod+Shift+P { power-off-monitors; }
+
+        // ---------------------------------------------------------
+        // OMARCHY-INSPIRED WORKFLOW (ADDED ALONGSIDE DEFAULTS)
+        // ---------------------------------------------------------
+        
+        // Launchers
+        Mod+Space  hotkey-overlay-title="Omarchy Launcher" { spawn "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+        Mod+Return hotkey-overlay-title="Omarchy Terminal" { spawn "alacritty"; }
+        Mod+B      hotkey-overlay-title="Omarchy Browser"  { spawn "firefox"; }
+    }
+  '';
+}
+
+
+---
+./home/user/programs/noctalia.nix
+---
+{ config, pkgs, inputs, ... }:
+{
+  # --- Noctalia Configuration ---
+
+  programs.noctalia-shell = {
+    enable = true;
+
+    # Color Scheme
+    colors = {
+      mError = "#ff5555";              # Clean red for visibility
+      mOnError = "#111111";            # Dark text on red
+      mOnPrimary = "#111111";          # Dark text to contrast against the bright yellow primary
+      mOnSecondary = "#111111";        # Dark text on the white secondary
+      mOnSurface = "#f5f5f5";          # Crisp white text for the dark backgrounds
+      mOnSurfaceVariant = "#cccccc";   # Slightly muted white for secondary text
+      mOnTertiary = "#111111";         # Dark text on the grey tertiary
+      mOnHover = "#ffffff";            # Bright pure white when hovered
+      mOutline = "#222222";            # Matched to Niri's inactive-color
+      mPrimary = "#FFD421";            # Matched to Niri's active-color (Soft warm yellow)
+      mSecondary = "#f5f5f5";          # The "White" in the "Black, White & Yellow" theme
+      mShadow = "#000000";             # Solid black to match Niri's shadow (#00000070)
+      mSurface = "#111111";            # Deepest background/base
+      mHover = "#333333";              # Slightly lighter than the surface variant for hover states
+      mSurfaceVariant = "#222222";     # Matched to Niri's inactive-color for cards/panels
+      mTertiary = "#888888";           # A balancing mid-grey
+    };
+
+    # Translated declarative settings
+    settings = {
+      settingsVersion = 59;
+      
+      bar = {
+        barType = "floating";
+        position = "top";
+        monitors = [];
+        density = "default";
+        showOutline = false;
+        showCapsule = true;
+        capsuleOpacity = 1;
+        capsuleColorKey = "none";
+        widgetSpacing = 6;
+        contentPadding = 2;
+        fontScale = 1;
+        enableExclusionZoneInset = true;
+        backgroundOpacity = 0.93;
+        useSeparateOpacity = false;
+        marginVertical = 4;
+        marginHorizontal = 4;
+        frameThickness = 8;
+        frameRadius = 12;
+        outerCorners = true;
+        hideOnOverview = false;
+        displayMode = "always_visible";
+        autoHideDelay = 500;
+        autoShowDelay = 150;
+        showOnWorkspaceSwitch = true;
+        
+        widgets = {
+          left = [
+            {
+              colorizeSystemIcon = "none";
+              colorizeSystemText = "none";
+              customIconPath = "";
+              enableColorization = false;
+              icon = "rocket";
+              iconColor = "none";
+              id = "Launcher";
+              useDistroLogo = false;
+            }
+            {
+              clockColor = "none";
+              customFont = "";
+              formatHorizontal = "HH:mm ddd, MMM dd";
+              formatVertical = "HH mm - dd MM";
+              id = "Clock";
+              tooltipFormat = "HH:mm ddd, MMM dd";
+              useCustomFont = false;
+            }
+            {
+              compactMode = true;
+              diskPath = "/";
+              iconColor = "none";
+              id = "SystemMonitor";
+              showCpuCores = false;
+              showCpuFreq = false;
+              showCpuTemp = true;
+              showCpuUsage = true;
+              showDiskAvailable = false;
+              showDiskUsage = false;
+              showDiskUsageAsPercent = false;
+              showGpuTemp = false;
+              showLoadAverage = false;
+              showMemoryAsPercent = false;
+              showMemoryUsage = true;
+              showNetworkStats = false;
+              showSwapUsage = false;
+              textColor = "none";
+              useMonospaceFont = true;
+              usePadding = false;
+            }
+            {
+              colorizeIcons = false;
+              hideMode = "hidden";
+              id = "ActiveWindow";
+              maxWidth = 145;
+              scrollingMode = "hover";
+              showIcon = true;
+              showText = true;
+              textColor = "none";
+              useFixedWidth = false;
+            }
+            {
+              compactMode = false;
+              hideMode = "hidden";
+              hideWhenIdle = false;
+              id = "MediaMini";
+              maxWidth = 145;
+              panelShowAlbumArt = true;
+              scrollingMode = "hover";
+              showAlbumArt = true;
+              showArtistFirst = true;
+              showProgressRing = true;
+              showVisualizer = false;
+              textColor = "none";
+              useFixedWidth = false;
+              visualizerType = "linear";
+            }
+            {
+              displayMode = "onhover";
+              iconColor = "none";
+              id = "Microphone";
+              middleClickCommand = "pwvucontrol || pavucontrol";
+              textColor = "none";
+            }
+          ];
+          
+          center = [
+            {
+              characterCount = 2;
+              colorizeIcons = false;
+              emptyColor = "secondary";
+              enableScrollWheel = true;
+              focusedColor = "primary";
+              followFocusedScreen = false;
+              fontWeight = "bold";
+              groupedBorderOpacity = 1;
+              hideUnoccupied = false;
+              iconScale = 0.8;
+              id = "Workspace";
+              labelMode = "index";
+              occupiedColor = "secondary";
+              pillSize = 0.6;
+              showApplications = false;
+              showApplicationsHover = false;
+              showBadge = true;
+              showLabelsOnlyWhenOccupied = true;
+              unfocusedIconsOpacity = 1;
+            }
+          ];
+          
+          right = [
+            {
+              blacklist = [];
+              chevronColor = "none";
+              colorizeIcons = false;
+              drawerEnabled = true;
+              hidePassive = false;
+              id = "Tray";
+              pinned = [];
+            }
+            {
+              hideWhenZero = false;
+              hideWhenZeroUnread = false;
+              iconColor = "none";
+              id = "NotificationHistory";
+              showUnreadBadge = true;
+              unreadBadgeColor = "primary";
+            }
+            {
+              deviceNativePath = "__default__";
+              displayMode = "graphic-clean";
+              hideIfIdle = false;
+              hideIfNotDetected = true;
+              id = "Battery";
+              showNoctaliaPerformance = false;
+              showPowerProfiles = false;
+            }
+            {
+              displayMode = "onhover";
+              iconColor = "none";
+              id = "Volume";
+              middleClickCommand = "pwvucontrol || pavucontrol";
+              textColor = "none";
+            }
+            {
+              applyToAllMonitors = false;
+              displayMode = "onhover";
+              iconColor = "none";
+              id = "Brightness";
+              textColor = "none";
+            }
+            {
+              colorizeDistroLogo = false;
+              colorizeSystemIcon = "none";
+              colorizeSystemText = "none";
+              customIconPath = "";
+              enableColorization = false;
+              icon = "noctalia";
+              id = "ControlCenter";
+              useDistroLogo = false;
+            }
+          ];
+        };
+        
+        mouseWheelAction = "none";
+        reverseScroll = false;
+        mouseWheelWrap = true;
+        middleClickAction = "none";
+        middleClickFollowMouse = false;
+        middleClickCommand = "";
+        rightClickAction = "controlCenter";
+        rightClickFollowMouse = true;
+        rightClickCommand = "";
+        screenOverrides = [];
+      };
+      
+      general = {
+        avatarImage = "/home/user/.face";
+        dimmerOpacity = 0.2;
+        showScreenCorners = false;
+        forceBlackScreenCorners = false;
+        scaleRatio = 1;
+        radiusRatio = 1;
+        iRadiusRatio = 1;
+        boxRadiusRatio = 1;
+        screenRadiusRatio = 1;
+        animationSpeed = 1;
+        animationDisabled = false;
+        compactLockScreen = true;
+        lockScreenAnimations = false;
+        lockOnSuspend = true;
+        showSessionButtonsOnLockScreen = true;
+        showHibernateOnLockScreen = false;
+        enableLockScreenMediaControls = false;
+        enableShadows = true;
+        enableBlurBehind = true;
+        shadowDirection = "bottom_right";
+        shadowOffsetX = 2;
+        shadowOffsetY = 3;
+        language = "";
+        allowPanelsOnScreenWithoutBar = true;
+        showChangelogOnStartup = true;
+        telemetryEnabled = false;
+        enableLockScreenCountdown = true;
+        lockScreenCountdownDuration = 10000;
+        autoStartAuth = false;
+        allowPasswordWithFprintd = false;
+        clockStyle = "custom";
+        clockFormat = "hh\\nmm";
+        passwordChars = false;
+        lockScreenMonitors = [];
+        lockScreenBlur = 0;
+        lockScreenTint = 0;
+        keybinds = {
+          keyUp = [ "Up" ];
+          keyDown = [ "Down" ];
+          keyLeft = [ "Left" ];
+          keyRight = [ "Right" ];
+          keyEnter = [ "Return" "Enter" ];
+          keyEscape = [ "Esc" ];
+          keyRemove = [ "Del" ];
+        };
+        reverseScroll = false;
+        smoothScrollEnabled = true;
+      };
+      
+      ui = {
+        fontDefault = "DejaVu Serif";
+        fontFixed = "Liberation Mono";
+        fontDefaultScale = 1;
+        fontFixedScale = 1;
+        tooltipsEnabled = true;
+        scrollbarAlwaysVisible = true;
+        boxBorderEnabled = false;
+        panelBackgroundOpacity = 0.93;
+        translucentWidgets = false;
+        panelsAttachedToBar = true;
+        settingsPanelMode = "attached";
+        settingsPanelSideBarCardStyle = false;
+      };
+      
+      location = {
+        name = "";
+        weatherEnabled = true;
+        weatherShowEffects = true;
+        weatherTaliaMascotAlways = false;
+        useFahrenheit = false;
+        use12hourFormat = false;
+        showWeekNumberInCalendar = false;
+        showCalendarEvents = true;
+        showCalendarWeather = true;
+        analogClockInCalendar = false;
+        firstDayOfWeek = -1;
+        hideWeatherTimezone = false;
+        hideWeatherCityName = false;
+        autoLocate = false;
+      };
+      
+      calendar = {
+        cards = [
+          { enabled = true; id = "calendar-header-card"; }
+          { enabled = true; id = "calendar-month-card"; }
+          { enabled = true; id = "weather-card"; }
+        ];
+      };
+      
+      wallpaper = {
+        enabled = true;
+        overviewEnabled = true;
+        directory = "/home/user/wallpapers";
+        monitorDirectories = [];
+        enableMultiMonitorDirectories = false;
+        showHiddenFiles = false;
+        viewMode = "single";
+        setWallpaperOnAllMonitors = true;
+        linkLightAndDarkWallpapers = true;
+        fillMode = "fit";
+        fillColor = "#000000";
+        useSolidColor = false;
+        solidColor = "#1a1a2e";
+        automationEnabled = true;
+        wallpaperChangeMode = "random";
+        randomIntervalSec = 120;
+        transitionDuration = 1500;
+        transitionType = [ "fade" ];
+        skipStartupTransition = false;
+        transitionEdgeSmoothness = 0.05;
+        panelPosition = "follow_bar";
+        hideWallpaperFilenames = true;
+        useOriginalImages = false;
+        overviewBlur = 0.4;
+        overviewTint = 0.6;
+        useWallhaven = false;
+        wallhavenQuery = "";
+        wallhavenSorting = "relevance";
+        wallhavenOrder = "desc";
+        wallhavenCategories = "111";
+        wallhavenPurity = "100";
+        wallhavenRatios = "";
+        wallhavenApiKey = "";
+        wallhavenResolutionMode = "atleast";
+        wallhavenResolutionWidth = "";
+        wallhavenResolutionHeight = "";
+        sortOrder = "name";
+        favorites = [];
+      };
+      
+      appLauncher = {
+        enableClipboardHistory = false;
+        autoPasteClipboard = false;
+        enableClipPreview = true;
+        clipboardWrapText = true;
+        enableClipboardSmartIcons = true;
+        enableClipboardChips = true;
+        clipboardWatchTextCommand = "wl-paste --type text --watch cliphist store";
+        clipboardWatchImageCommand = "wl-paste --type image --watch cliphist store";
+        position = "center";
+        pinnedApps = [];
+        sortByMostUsed = true;
+        terminalCommand = "alacritty -e";
+        customLaunchPrefixEnabled = false;
+        customLaunchPrefix = "";
+        viewMode = "list";
+        showCategories = true;
+        iconMode = "tabler";
+        showIconBackground = false;
+        enableSettingsSearch = true;
+        enableWindowsSearch = true;
+        enableSessionSearch = true;
+        ignoreMouseInput = false;
+        screenshotAnnotationTool = "";
+        overviewLayer = false;
+        density = "default";
+      };
+      
+      controlCenter = {
+        position = "close_to_bar_button";
+        diskPath = "/";
+        shortcuts = {
+          left = [
+            { id = "Network"; }
+            { id = "Bluetooth"; }
+            { id = "WallpaperSelector"; }
+            { id = "NoctaliaPerformance"; }
+          ];
+          right = [
+            { id = "Notifications"; }
+            { id = "PowerProfile"; }
+            { id = "KeepAwake"; }
+            { id = "NightLight"; }
+          ];
+        };
+        cards = [
+          { enabled = true; id = "profile-card"; }
+          { enabled = true; id = "shortcuts-card"; }
+          { enabled = true; id = "audio-card"; }
+          { enabled = false; id = "brightness-card"; }
+          { enabled = true; id = "weather-card"; }
+          { enabled = true; id = "media-sysmon-card"; }
+        ];
+      };
+      
+      systemMonitor = {
+        cpuWarningThreshold = 80;
+        cpuCriticalThreshold = 90;
+        tempWarningThreshold = 80;
+        tempCriticalThreshold = 90;
+        gpuWarningThreshold = 80;
+        gpuCriticalThreshold = 90;
+        memWarningThreshold = 80;
+        memCriticalThreshold = 90;
+        swapWarningThreshold = 80;
+        swapCriticalThreshold = 90;
+        diskWarningThreshold = 80;
+        diskCriticalThreshold = 90;
+        diskAvailWarningThreshold = 20;
+        diskAvailCriticalThreshold = 10;
+        batteryWarningThreshold = 20;
+        batteryCriticalThreshold = 5;
+        enableDgpuMonitoring = false;
+        useCustomColors = false;
+        warningColor = "";
+        criticalColor = "";
+        externalMonitor = "resources || missioncenter || jdsystemmonitor || corestats || system-monitoring-center || gnome-system-monitor || plasma-systemmonitor || mate-system-monitor || ukui-system-monitor || deepin-system-monitor || pantheon-system-monitor";
+      };
+      
+      noctaliaPerformance = {
+        disableWallpaper = true;
+        disableDesktopWidgets = true;
+      };
+      
+      dock = {
+        enabled = false;
+        position = "bottom";
+        displayMode = "auto_hide";
+        dockType = "floating";
+        backgroundOpacity = 1;
+        floatingRatio = 1;
+        size = 1;
+        onlySameOutput = true;
+        monitors = [];
+        pinnedApps = [];
+        colorizeIcons = false;
+        showLauncherIcon = false;
+        launcherPosition = "end";
+        launcherUseDistroLogo = false;
+        launcherIcon = "";
+        launcherIconColor = "none";
+        pinnedStatic = false;
+        inactiveIndicators = false;
+        groupApps = false;
+        groupContextMenuMode = "extended";
+        groupClickAction = "cycle";
+        groupIndicatorStyle = "dots";
+        deadOpacity = 0.6;
+        animationSpeed = 1;
+        sitOnFrame = false;
+        showDockIndicator = false;
+        indicatorThickness = 3;
+        indicatorColor = "primary";
+        indicatorOpacity = 0.6;
+      };
+      
+      network = {
+        bluetoothRssiPollingEnabled = false;
+        bluetoothRssiPollIntervalMs = 60000;
+        networkPanelView = "wifi";
+        wifiDetailsViewMode = "grid";
+        bluetoothDetailsViewMode = "grid";
+        bluetoothHideUnnamedDevices = false;
+        disableDiscoverability = false;
+        bluetoothAutoConnect = true;
+      };
+      
+      sessionMenu = {
+        enableCountdown = true;
+        countdownDuration = 10000;
+        position = "center";
+        showHeader = true;
+        showKeybinds = true;
+        largeButtonsStyle = true;
+        largeButtonsLayout = "single-row";
+        powerOptions = [
+          { action = "lock"; enabled = true; keybind = "1"; }
+          { action = "suspend"; enabled = true; keybind = "2"; }
+          { action = "hibernate"; enabled = true; keybind = "3"; }
+          { action = "reboot"; enabled = true; keybind = "4"; }
+          { action = "logout"; enabled = true; keybind = "5"; }
+          { action = "shutdown"; enabled = true; keybind = "6"; }
+          { action = "rebootToUefi"; enabled = true; keybind = "7"; }
+        ];
+      };
+      
+      notifications = {
+        enabled = true;
+        enableMarkdown = false;
+        density = "default";
+        monitors = [];
+        location = "top_right";
+        overlayLayer = true;
+        backgroundOpacity = 1;
+        respectExpireTimeout = false;
+        lowUrgencyDuration = 3;
+        normalUrgencyDuration = 8;
+        criticalUrgencyDuration = 15;
+        clearDismissed = true;
+        saveToHistory = {
+          low = true;
+          normal = true;
+          critical = true;
+        };
+        sounds = {
+          enabled = false;
+          volume = 0.5;
+          separateSounds = false;
+          criticalSoundFile = "";
+          normalSoundFile = "";
+          lowSoundFile = "";
+          excludedApps = "discord,firefox,chrome,chromium,edge";
+        };
+        enableMediaToast = false;
+        enableKeyboardLayoutToast = true;
+        enableBatteryToast = true;
+      };
+      
+      osd = {
+        enabled = true;
+        location = "top_right";
+        autoHideMs = 2000;
+        overlayLayer = true;
+        backgroundOpacity = 1;
+        enabledTypes = [ 0 1 2 ];
+        monitors = [];
+      };
+      
+      audio = {
+        volumeStep = 5;
+        volumeOverdrive = false;
+        spectrumFrameRate = 30;
+        visualizerType = "linear";
+        spectrumMirrored = true;
+        mprisBlacklist = [];
+        preferredPlayer = "";
+        volumeFeedback = false;
+        volumeFeedbackSoundFile = "";
+      };
+      
+      brightness = {
+        brightnessStep = 5;
+        enforceMinimum = true;
+        enableDdcSupport = false;
+        backlightDeviceMappings = [];
+      };
+      
+      colorSchemes = {
+        useWallpaperColors = false;
+        predefinedScheme = "Noctalia (default)";
+        darkMode = true;
+        schedulingMode = "off";
+        manualSunrise = "06:30";
+        manualSunset = "18:30";
+        generationMethod = "tonal-spot";
+        monitorForColors = "";
+        syncGsettings = true;
+      };
+      
+      templates = {
+        activeTemplates = [];
+        enableUserTheming = false;
+      };
+      
+      nightLight = {
+        enabled = false;
+        forced = false;
+        autoSchedule = true;
+        nightTemp = "4000";
+        dayTemp = "6500";
+        manualSunrise = "06:30";
+        manualSunset = "18:30";
+      };
+      
+      hooks = {
+        enabled = false;
+        wallpaperChange = "";
+        darkModeChange = "";
+        screenLock = "";
+        screenUnlock = "";
+        performanceModeEnabled = "";
+        performanceModeDisabled = "";
+        startup = "";
+        session = "";
+        colorGeneration = "";
+      };
+      
+      plugins = {
+        autoUpdate = false;
+        notifyUpdates = true;
+      };
+      
+      idle = {
+        enabled = false;
+        screenOffTimeout = 600;
+        lockTimeout = 660;
+        suspendTimeout = 1800;
+        fadeDuration = 5;
+        screenOffCommand = "";
+        lockCommand = "";
+        suspendCommand = "";
+        resumeScreenOffCommand = "";
+        resumeLockCommand = "";
+        resumeSuspendCommand = "";
+        customCommands = "[]";
+      };
+      
+      desktopWidgets = {
+        enabled = false;
+        overviewEnabled = true;
+        gridSnap = false;
+        gridSnapScale = false;
+        monitorWidgets = [];
+      };
+    };
+  };
+
+
+}
+
+
+---
+./home/user/programs/ssh.nix
+---
+{ config, pkgs, inputs, ... }:
+
+{
+programs.ssh = {
+    enable = true;
+    
+    # Warning Fix 2: Prevent future breaking updates by disabling implicit defaults
+    enableDefaultConfig = false;
+
+    # Warning Fix 1: `matchBlocks` is now configured directly under `settings`
+    settings = {
+      "github.com" = {
+        HostName = "github.com";
+        IdentityFile = "~/.ssh/id_ed25519"; 
+      };
+
+      # Optional: If you want to replicate Home Manager's traditional defaults
+      # manually under the new system, you can uncomment this block:
+      # "*" = {
+      #   SendEnv = "LANG LC_*";
+      # };
+    };
+  };
+}
+
+
+/*
+=============================================================================
+METH0D 1: DECLARATIVE GIT + SSH AUTHENTICATION SETUP GUIDE
+=============================================================================
+
+This file handles your Git/SSH identity configuration. Because NixOS emphasizes 
+security, private keys are kept strictly local to each machine, while the 
+configuration rules below are pushed to GitHub.
+
+--- STEP 1: GENERATE A NEW SSH KEY FOR THIS MACHINE ---
+Open your terminal on the local machine and run:
+  $ ssh-keygen -t ed25519 -C "redazanelc@gmail.com"
+
+- Press [Enter] to accept the default file path (~/.ssh/id_ed25519).
+- (Optional) Enter a strong passphrase, or press enter twice for no password.
+
+--- STEP 2: LINK THE KEY TO YOUR GITHUB ACCOUNT ---
+1. Print out your unique public key to the terminal:
+   $ cat ~/.ssh/id_ed25519.pub
+
+2. Copy the entire output string (starts with ssh-ed25519 ...).
+3. Open your browser and navigate to: https://github.com/settings/keys
+4. Click 'New SSH Key', paste your key, and give it a recognizable name 
+   describing this specific computer (e.g., "NixOS - Main Desktop").
+
+--- STEP 3: TEST YOUR CONNECTION ---
+Verify that GitHub recognizes your key pair by running:
+  $ ssh -T git@github.com
+
+  TYPE "yes" HERE
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? 
+
+If successful, you will see: 
+"Hi redazanelc! You've successfully authenticated, but GitHub does not 
+provide shell access."
+
+--- STEP 4: UPDATE YOUR LOCAL REPOSITORY LINK ---
+If you originally cloned your nixos-config repository using an HTTPS url, 
+convert it to use SSH authentication instead:
+  $ cd ~/nixos-config
+  $ git remote set-url origin git@github.com:your-username/your-repo-name.git
+
+From this point forward, commands like `git push` and `git pull` will function 
+silently and securely in the background without prompting you for a password.
+=============================================================================
+*/
+
+
+---

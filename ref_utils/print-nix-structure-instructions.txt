@@ -1,0 +1,5 @@
+formats everything perfectly into a clean layout with file path delimiters, you can use a Python utility called files-to-prompt
+
+RUN IN ~/nixos-config/
+
+nix-shell -p python311Packages.files-to-prompt --run "files-to-prompt ." > codebase_dump.txt
