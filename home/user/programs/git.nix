@@ -83,6 +83,9 @@ Open your terminal on the local machine and run:
 Verify that GitHub recognizes your key pair by running:
   $ ssh -T git@github.com
 
+  TYPE "yes" HERE
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? 
+
 If successful, you will see: 
 "Hi redazanelc! You've successfully authenticated, but GitHub does not 
 provide shell access."

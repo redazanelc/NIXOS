@@ -6,7 +6,7 @@ programs.ssh = {
     
     # Automatically add GitHub to known hosts so Nix doesn't ask 
     # "Are you sure you want to continue connecting?" on a new machine.
-    matchBlocks = {
+    settings.matchBlocks = {
       "github.com" = {
         hostname = "github.com";
         identityFile = "~/.ssh/id_ed25519"; # Tells Git exactly where to look for this machine's key
@@ -44,6 +44,9 @@ Open your terminal on the local machine and run:
 --- STEP 3: TEST YOUR CONNECTION ---
 Verify that GitHub recognizes your key pair by running:
   $ ssh -T git@github.com
+
+  TYPE "yes" HERE
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? 
 
 If successful, you will see: 
 "Hi redazanelc! You've successfully authenticated, but GitHub does not 
