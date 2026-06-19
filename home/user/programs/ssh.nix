@@ -4,13 +4,21 @@
 programs.ssh = {
     enable = true;
     
-    # Automatically add GitHub to known hosts so Nix doesn't ask 
-    # "Are you sure you want to continue connecting?" on a new machine.
-    matchBlocks = {
+    # Warning Fix 2: Prevent future breaking updates by disabling implicit defaults
+    enableDefaultConfig = false;
+
+    # Warning Fix 1: `matchBlocks` is now configured directly under `settings`
+    settings = {
       "github.com" = {
-        hostname = "github.com";
-        identityFile = "~/.ssh/id_ed25519"; # Tells Git exactly where to look for this machine's key
+        HostName = "github.com";
+        IdentityFile = "~/.ssh/id_ed25519"; 
       };
+
+      # Optional: If you want to replicate Home Manager's traditional defaults
+      # manually under the new system, you can uncomment this block:
+      # "*" = {
+      #   SendEnv = "LANG LC_*";
+      # };
     };
   };
 }
