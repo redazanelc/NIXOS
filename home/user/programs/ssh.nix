@@ -6,7 +6,7 @@ programs.ssh = {
     
     # Automatically add GitHub to known hosts so Nix doesn't ask 
     # "Are you sure you want to continue connecting?" on a new machine.
-    settings.matchBlocks = {
+    matchBlocks = {
       "github.com" = {
         hostname = "github.com";
         identityFile = "~/.ssh/id_ed25519"; # Tells Git exactly where to look for this machine's key
