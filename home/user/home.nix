@@ -12,6 +12,7 @@
     ./programs/noctalia.nix
     ./programs/niri.nix
     ./programs/git.nix
+    ./programs/ssh.nix
   ];
 
   home.packages = with pkgs; [
