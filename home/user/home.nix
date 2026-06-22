@@ -60,6 +60,9 @@
 
     # System Stats
     inxi
+
+    # Code
+    antigravity
     
     
     

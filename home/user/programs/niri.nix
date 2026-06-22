@@ -16,6 +16,53 @@
         mouse {}
     }
 
+    // --- Core Shell Launch ---
+    // Launch Noctalia immediately. This is the correct method since the Nix module 
+    // does not provision a systemd service, but rather configures the environment natively.
+    spawn-at-startup "noctalia-shell"
+
+
+    
+    // --- Startup Applications ---
+    // These commands will execute sequentially when Niri starts
+    spawn-at-startup "firefox"
+    spawn-at-startup "alacritty"
+    spawn-at-startup "code" 
+    spawn-at-startup "keepassxc" 
+
+    // --- Named Workspaces ---
+    // Defining explicit names for your workspaces
+    workspace "Web" {}
+    workspace "Terminal" {}
+    workspace "Code" {}
+    workspace "Keys" {}
+
+    // --- Window Rules ---
+    // Intercepting window creation and routing them to the correct workspace
+    window-rule {
+      match app-id="firefox"
+      open-on-workspace "Web"
+    }
+
+    window-rule {
+      match app-id="alacritty" 
+      open-on-workspace "Terminal"
+    }
+
+    window-rule {
+      // "code" is the standard executable/app-id for VSCode. 
+      // Change to "vscodium" if you use the open-source binary.
+      match app-id="antigravity" 
+      open-on-workspace "Code"
+    }
+
+    window-rule {
+      // The exact app-id for KeePassXC under Wayland is typically its reverse domain name
+      match app-id="keepassxc" 
+      open-on-workspace "Keys"
+    }
+
+
     // Layout, Aesthetics, and Theming
     layout {
         gaps 12
@@ -52,8 +99,7 @@
         }
     }
 
-    // Automatically starts your new desktop shell instead of Waybar
-    spawn-at-startup "noctalia-shell"
+
 
     // Forces applications to drop their ugly default titlebars 
     // so Niri's yellow focus ring shines cleanly.
@@ -166,19 +212,15 @@
         // Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
         // Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
 
-        Mod+Page_Down      { focus-workspace-down; }
-        Mod+Page_Up        { focus-workspace-up; }
         Mod+Z              { focus-workspace-down; }
         Mod+A              { focus-workspace-up; }
-        Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
-        Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
-        Mod+Ctrl+U         { move-column-to-workspace-down; }
-        Mod+Ctrl+I         { move-column-to-workspace-up; }
+        Mod+Ctrl+Z         { move-column-to-workspace-down; }
+        Mod+Ctrl+A         { move-column-to-workspace-up; }
 
-        Mod+Shift+Page_Down { move-workspace-down; }
-        Mod+Shift+Page_Up   { move-workspace-up; }
-        Mod+Shift+U         { move-workspace-down; }
-        Mod+Shift+I         { move-workspace-up; }
+        //Mod+Shift+Page_Down { move-workspace-down; }
+        //Mod+Shift+Page_Up   { move-workspace-up; }
+        //Mod+Shift+U         { move-workspace-down; }
+        //Mod+Shift+I         { move-workspace-up; }
 
         Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
         Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
