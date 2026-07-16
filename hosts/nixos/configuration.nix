@@ -75,7 +75,7 @@
   environment.systemPackages = with pkgs; [
     lshw
     xwayland-satellite
-    opensc
+    ccid
     pcsc-tools
   ];
 

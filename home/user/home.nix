@@ -44,6 +44,7 @@
     wget
     unzip
     zip
+    pciutils
 
     # Modern CLI Tools
     eza
@@ -63,6 +64,10 @@
 
     # Code
     antigravity
+
+    # Notes
+    obsidian
+
     
     
     
