@@ -29,7 +29,7 @@
           ];
         };
 
-  
+    # sudo nixos-rebuild switch --flake .#nixos ****************************
     nixosConfigurations = {
       # "nixos" is your hostname
       nixos = nixpkgs.lib.nixosSystem {

@@ -75,12 +75,16 @@
   environment.systemPackages = with pkgs; [
     lshw
     xwayland-satellite
+    opensc
+    pcsc-tools
   ];
 
   # --- Programs & Services ---
   programs.niri.enable = true;
 
   programs.kdeconnect.enable = true;
+
+  services.pcscd.enable = true;
 
   services.upower.enable = true;
   services.power-profiles-daemon.enable = true;

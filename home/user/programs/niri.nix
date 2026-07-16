@@ -152,6 +152,7 @@
         // Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
         // Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
         Mod+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "noctalia-shell" "ipc" "call" "lockScreen" "lock"; }
+        Mod+Escape hotkey-overlay-title="Shutdown Menu" {spawn "noctalia-shell" "ipc" "call" "panel-toggle" "session";}
 
         Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
 
