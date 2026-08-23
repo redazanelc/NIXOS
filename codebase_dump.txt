@@ -382,6 +382,7 @@ nix-shell -p python311Packages.files-to-prompt --run "files-to-prompt ." > codeb
     ./programs/niri.nix
     ./programs/git.nix
     ./programs/ssh.nix
+    ./programs/obsidian.nix
   ];
 
   home.packages = with pkgs; [
@@ -413,6 +414,7 @@ nix-shell -p python311Packages.files-to-prompt --run "files-to-prompt ." > codeb
     wget
     unzip
     zip
+    pciutils
 
     # Modern CLI Tools
     eza
@@ -432,6 +434,10 @@ nix-shell -p python311Packages.files-to-prompt --run "files-to-prompt ." > codeb
 
     # Code
     antigravity
+
+    # Notes
+    obsidian
+
     
     
     
@@ -1579,6 +1585,19 @@ silently and securely in the background without prompting you for a password.
 
 
 }
+
+
+---
+./home/user/programs/obsidian.nix
+---
+{ config, pkgs, ... }:
+{
+
+programs.obsidian.enable = true;
+
+programs.obsidian.defaultsettings = {
+		themes = Obsidian Nord;
+    };
 
 
 ---
